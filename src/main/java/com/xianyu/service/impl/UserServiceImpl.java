@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 
-import static com.xianyu.utils.SystemConstants.DEFAULT_PASSWORD;
-import static com.xianyu.utils.SystemConstants.USER_NICK_NAME_PREFIX;
+import static com.xianyu.utils.SystemConstants.*;
 
 
 @Slf4j
@@ -61,7 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user==null){
             user=creatUserWithPhone(phone);
         }
-        session.setAttribute("user",user);
+        session.setAttribute(DEFAULT_SESSION_KEY,user);
         return Result.ok();
     }
 
