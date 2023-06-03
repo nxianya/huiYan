@@ -3,9 +3,11 @@ package com.xianyu.controller;
 
 import com.xianyu.dto.LoginFormDTO;
 import com.xianyu.dto.Result;
+import com.xianyu.dto.UserDTO;
 import com.xianyu.entity.UserInfo;
 import com.xianyu.service.IUserInfoService;
 import com.xianyu.service.IUserService;
+import com.xianyu.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,15 +50,16 @@ public class UserController {
      * @return 无
      */
     @PostMapping("/logout")
-    public Result logout(){
-        // TODO 实现登出功能
-        return Result.fail("功能未完成");
+    public Result logout(HttpSession session){
+        //登出功能
+        return userService.logout(session);
     }
 
     @GetMapping("/me")
     public Result me(){
-        // TODO 获取当前登录的用户并返回
-        return Result.fail("功能未完成");
+        //获取当前登录的用户并返回
+        UserDTO user = UserHolder.getUser();
+        return Result.ok(user);
     }
 
     @GetMapping("/info/{id}")

@@ -1,13 +1,14 @@
 package com.xianyu.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xianyu.dto.LoginFormDTO;
 import com.xianyu.dto.Result;
+import com.xianyu.dto.UserDTO;
 import com.xianyu.entity.User;
 import com.xianyu.mapper.UserMapper;
 import com.xianyu.service.IUserService;
-import com.xianyu.utils.Md5Util;
 import com.xianyu.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user==null){
             user=creatUserWithPhone(phone);
         }
-        session.setAttribute(DEFAULT_SESSION_KEY,user);
+        session.setAttribute(DEFAULT_SESSION_KEY, BeanUtil.copyProperties(user, UserDTO.class));
+        return Result.ok();
+    }
+
+    @Override
+    public Result logout(HttpSession session) {
+        session.removeAttribute(DEFAULT_SESSION_KEY);
         return Result.ok();
     }
 

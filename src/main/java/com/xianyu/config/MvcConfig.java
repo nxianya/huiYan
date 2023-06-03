@@ -11,11 +11,11 @@ public class MvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
-                        "user/code",
-                        "user/login",
-                        "blog/hot",
-                        "shop/**",
-                        "shop-type/**",
-                        "voucher/**");
+                        "/user/code",
+                        "/user/login",
+                        "/blog/hot",
+                        "/shop/**",
+                        "/shop-type/**",
+                        "/voucher/**");
     }
 }
