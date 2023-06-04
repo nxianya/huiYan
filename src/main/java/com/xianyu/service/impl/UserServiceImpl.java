@@ -21,8 +21,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.xianyu.utils.RedisConstants.LOGIN_CODE_KEY;
-import static com.xianyu.utils.RedisConstants.LOGIN_CODE_TTL;
+import static com.xianyu.utils.RedisConstants.*;
 import static com.xianyu.utils.SystemConstants.*;
 
 
@@ -81,7 +80,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //生成Token
         String Token = JwtUtils.generateJwt(userMap);
         //将user对象转为Hash存储
-        stringRedisTemplate.opsForHash().putAll(Token,userMap);
+        stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY+Token,userMap);
+        //设置登录过期时间
+        stringRedisTemplate.expire(LOGIN_USER_KEY+Token,LOGIN_USER_TTL,TimeUnit.MINUTES);
         //返回Token
         return Result.ok(Token);
     }
