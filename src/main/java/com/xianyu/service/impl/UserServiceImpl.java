@@ -81,8 +81,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //        session.setAttribute(DEFAULT_SESSION_KEY, BeanUtil.copyProperties(user, UserDTO.class));
         //生成Token
         String Token = JwtUtils.generateJwt(userMap);
+        userMap.forEach((key,item)->{
+            if (null!=item){
+                userMap.put(key,item.toString());
+            }
+        });
         //将user对象转为Hash存储
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY+Token,userMap);
+
         //设置登录过期时间
         stringRedisTemplate.expire(LOGIN_USER_KEY+Token,LOGIN_USER_TTL,TimeUnit.MINUTES);
         //返回Token
