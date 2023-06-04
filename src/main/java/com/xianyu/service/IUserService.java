@@ -21,10 +21,9 @@ public interface IUserService extends IService<User> {
     /**
      * 用户登录
      * @param loginForm 登录表单信息
-     * @param session session
      * @return 登录结果
      */
-    Result login(LoginFormDTO loginForm, HttpSession session);
+    Result login(LoginFormDTO loginForm);
 
     /**
      * @return 退出登录
