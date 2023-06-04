@@ -10,7 +10,7 @@ import java.util.Map;
 public class JwtUtils {
 
     private static String signKey = "xianyu";
-    private static Long expire = 1800000L;//过期时间,单位毫秒
+    private static Long expire = 43200000L;//12H过期时间
 
     /**
      * 生成JWT令牌

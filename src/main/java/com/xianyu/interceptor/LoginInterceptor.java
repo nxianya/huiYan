@@ -9,17 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.xianyu.utils.RedisConstants.LOGIN_USER_KEY;
 import static com.xianyu.utils.RedisConstants.LOGIN_USER_TTL;
-import static com.xianyu.utils.SystemConstants.DEFAULT_SESSION_KEY;
 
 @Slf4j
 public class LoginInterceptor implements HandlerInterceptor {
@@ -39,10 +36,13 @@ public class LoginInterceptor implements HandlerInterceptor {
             response.setStatus(401);
             return false;
         }
-        //解析令牌,解析失败则拦截
+        //解析令牌,设定强制过期时间
         try {
             JwtUtils.parseJWT(Token);
         } catch (Exception e) {
+            //todo 抛出自定义异常,提示用户
+            //令牌被修改或已过期
+            stringRedisTemplate.delete(LOGIN_USER_KEY+Token);
             response.setStatus(401);
             return false;
         }
