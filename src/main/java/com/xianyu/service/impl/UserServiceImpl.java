@@ -1,6 +1,7 @@
 package com.xianyu.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xianyu.dto.LoginFormDTO;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -76,16 +78,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         //将用户的敏感信息筛除
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
-        //userDTO转为HashMap
-        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO);
+        //userDTO转为HashMap并将userMap中的值转换为String类型,方式一
+        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO,new HashMap<>(),
+                CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor((fieldName,fieldValue)->
+                    fieldValue.toString()
+                ));
 //        session.setAttribute(DEFAULT_SESSION_KEY, BeanUtil.copyProperties(user, UserDTO.class));
         //生成Token
         String Token = JwtUtils.generateJwt(userMap);
-        userMap.forEach((key,item)->{
-            if (null!=item){
-                userMap.put(key,item.toString());
-            }
-        });
+        //方式二
+//        userMap.forEach((key,item)->{
+//            if (null!=item){
+//                userMap.put(key,item.toString());
+//            }
+//        });
+
+
         //将user对象转为Hash存储
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY+Token,userMap);
 
