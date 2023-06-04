@@ -45,6 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //存入session
 //        session.setAttribute(phone,code);
         //todo 发送验证码
+        //穷,没钱,先模拟
         //使用redis缓存验证码
         stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY+phone,code,LOGIN_CODE_TTL,TimeUnit.MINUTES);
         log.info("code:{}",code);
@@ -70,6 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         User user = query().ge("phone", phone).one();
         if (user==null){
+            //注册用户
             user=creatUserWithPhone(phone);
         }
         //将用户的敏感信息筛除
