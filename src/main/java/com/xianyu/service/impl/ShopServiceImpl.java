@@ -7,6 +7,8 @@ import com.xianyu.entity.Shop;
 import com.xianyu.mapper.ShopMapper;
 import com.xianyu.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xianyu.utils.RandomUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 import static com.xianyu.utils.RedisConstants.*;
 
 
+
+@Slf4j
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
     @Resource
@@ -45,7 +49,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             Map<Object, Object> emptyShopMap = new HashMap<>();
             emptyShopMap.put("null",null);
             stringRedisTemplate.opsForHash().putAll(CACHE_SHOP_KEY+id,emptyShopMap);
-            stringRedisTemplate.expire(CACHE_SHOP_KEY+id,CACHE_NULL_TTL,TimeUnit.MINUTES);
+            stringRedisTemplate.expire(CACHE_SHOP_KEY+id,CACHE_NULL_TTL+ RandomUtils.getRangeRandom(),TimeUnit.MINUTES);
             return Result.fail("店铺不存在");
         }
         Map<String, Object> newShopMap = BeanUtil.beanToMap(shop);
@@ -56,7 +60,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         });
         //将查到的信息写入Redis
         stringRedisTemplate.opsForHash().putAll(CACHE_SHOP_KEY+id,newShopMap);
-        stringRedisTemplate.expire(CACHE_SHOP_KEY+id,CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        log.info("CACHE_SHOP_TTL:{}",CACHE_SHOP_TTL);
+        stringRedisTemplate.expire(CACHE_SHOP_KEY+id,CACHE_SHOP_TTL+ RandomUtils.getRangeRandom(), TimeUnit.MINUTES);
         //返回商铺信息
         return Result.ok(shop);
     }
