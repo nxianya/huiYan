@@ -1,9 +1,12 @@
 package com.xianyu;
 
+import com.xianyu.service.IShopService;
+import com.xianyu.service.impl.ShopServiceImpl;
 import com.xianyu.utils.JwtUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
@@ -11,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootTest
-class HmDianPingApplicationTests {
+class HyDianPingApplicationTest {
 
     @Test
     void Test() throws InterruptedException {
