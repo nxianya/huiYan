@@ -113,7 +113,7 @@ public class CacheClient {
     }
 
     //预防缓存击穿+缓存穿透
-    public <T,R> T queryWithPassThroughAndLogicalExpire(String keyPrefix, R id,Class<T> type,Function<R,T> dbFallback,Long time,Long nullTime, TimeUnit unit){
+    public <T,R> T queryWithPassThroughAndLogicalExpire(String keyPrefix, R id,Class<T> type,Function<R,T> dbFallback,Long setTime,Long setExpireTime,Long setNullTime, TimeUnit unit){
         String key =keyPrefix+id;
         //从Redis查询缓存
         String jsonStr = stringRedisTemplate.opsForValue().get(key);
@@ -130,10 +130,10 @@ public class CacheClient {
             }
             T t = dbFallback.apply(id);
             if (t==null){
-                set(key,"",nullTime,unit);
+                set(key,"",setNullTime,unit);
                 return null;
             }
-            set(key,JSONUtil.toJsonStr(t),time,unit);
+            set(key,JSONUtil.toJsonStr(t),setTime,unit);
             return t;
         }
         JSONObject jsonObject = (JSONObject) redisData.getData();
@@ -165,7 +165,7 @@ public class CacheClient {
             CACHE_REBUILD_EXECUTOR.submit(()->{
                 try {
                     T t1 = dbFallback.apply(id);
-                    setWithLogicalExpire(key,t1,time,unit);
+                    setWithLogicalExpire(key,t1,setExpireTime,unit);
                 }catch (Exception e){
                     throw new RuntimeException(e);
                 } finally {
