@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,9 +56,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("秒杀卷已抢完!");
         }
         Long userId = UserHolder.getUser().getId();
-        synchronized (userId.toString().intern()){
-            String jsonStr = stringRedisTemplate.opsForValue().get(LOGIN_USER_KEY + userId);
-            if ( StringUtils.isNotBlank(jsonStr)){
+
+            Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent("cache:user:voucher:lock:", userId.toString(),LocalDateTime.now().until(seckillVoucher.getEndTime(), ChronoUnit.MINUTES), TimeUnit.MINUTES);
+            if ( !lock){
                 return Result.fail("用户已购买过此卷!");
             }
             int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
@@ -70,8 +71,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             if (!flag){
                 return Result.fail("库存不足!");
             }
-            stringRedisTemplate.opsForValue().set(LOGIN_USER_KEY + userId,"yes",1L, TimeUnit.DAYS);
-        }
+
         //创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
         long orderId = redisIdWorker.nextId(SECKILL_STOCK_KEY);
