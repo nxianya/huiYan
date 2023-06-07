@@ -1,8 +1,7 @@
 package com.xianyu;
 
-import com.xianyu.service.IShopService;
-import com.xianyu.service.impl.ShopServiceImpl;
 import com.xianyu.utils.JwtUtils;
+import com.xianyu.utils.RedisIdWorker;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.Test;
@@ -12,6 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootTest
 class HyDianPingApplicationTest {
@@ -36,4 +38,25 @@ class HyDianPingApplicationTest {
         }
     }
 
+    @Autowired
+    private RedisIdWorker redisIdWorker;
+
+    private ExecutorService es = Executors.newFixedThreadPool(500);
+
+    @Test
+    void TestTimeStamp() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(300);
+        Runnable task=()->{
+            for (int i = 0; i < 100; i++) {
+                System.out.println(redisIdWorker.nextId("voucher"));
+            }
+        };
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 300; i++) {
+            es.submit(task);
+        }
+        long end = System.currentTimeMillis();
+        latch.await();
+        System.out.println(end - start);
+    }
 }
