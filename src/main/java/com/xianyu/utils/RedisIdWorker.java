@@ -32,7 +32,7 @@ public class RedisIdWorker {
         //序列号32bit
         //添加日期字符串防止一直使用同一个key自增,理论上有达到上限的可能性(2^64),且序列号设定的上限为2^32
         String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
-        long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix + ":" + date+":");
+        long count = stringRedisTemplate.opsForValue().increment("icr:" + keyPrefix  + date+":");
         stringRedisTemplate.expire("icr:" + keyPrefix + ":" + date+":",1L, TimeUnit.DAYS);
         //拼接
         return timeStamp<<COUNT_BITS|count;
