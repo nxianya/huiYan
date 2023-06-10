@@ -11,6 +11,7 @@ import com.xianyu.entity.User;
 import com.xianyu.mapper.UserMapper;
 import com.xianyu.service.IUserService;
 import com.xianyu.utils.JwtUtils;
+import com.xianyu.utils.Md5Util;
 import com.xianyu.utils.RegexUtils;
 import com.xianyu.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -66,17 +67,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //获取输入的验证码进行比较
         String inputCode = loginForm.getCode();
         String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
-        if (cacheCode==null){
+        if (cacheCode==null&&loginForm.getPassword()==null){
             return Result.fail("请先获取验证码");
         }
-        else if(!inputCode.equals(cacheCode)){
-            return Result.fail("验证码错误");
+        else if(cacheCode!=null){
+            if (!inputCode.equals(cacheCode)) {
+                return Result.fail("验证码错误");
+            }
         }
-
         User user = query().eq("phone", phone).one();
         if (user==null){
             //注册用户
             user=creatUserWithPhone(phone);
+        }else {
+            if (!user.getPassword().equals(Md5Util.inputPassToDBPass(loginForm.getPassword()))) {
+                return Result.fail("密码错误,请输入正确的密码");
+            }
         }
         //将用户的敏感信息筛除
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
