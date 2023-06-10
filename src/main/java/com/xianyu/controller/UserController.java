@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 
@@ -50,9 +51,9 @@ public class UserController {
      * @return 无
      */
     @PostMapping("/logout")
-    public Result logout(HttpSession session){
+    public Result logout(HttpServletRequest request){
         //登出功能
-        return userService.logout(session);
+        return userService.logout(request);
     }
 
     @GetMapping("/me")
@@ -60,6 +61,11 @@ public class UserController {
         //获取当前登录的用户并返回
         UserDTO user = UserHolder.getUser();
         return Result.ok(user);
+    }
+
+    @GetMapping("/{id}")
+    public Result queryUser(@PathVariable("id") Long id){
+        return userService.queryUser(id);
     }
 
     @GetMapping("/info/{id}")
