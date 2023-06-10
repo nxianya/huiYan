@@ -5,6 +5,7 @@ import com.xianyu.dto.LoginFormDTO;
 import com.xianyu.dto.Result;
 import com.xianyu.entity.User;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 
@@ -28,5 +29,7 @@ public interface IUserService extends IService<User> {
     /**
      * @return 退出登录
      */
-    Result logout(HttpSession session);
+    Result logout(HttpServletRequest request);
+
+    Result queryUser(Long id);
 }

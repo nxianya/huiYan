@@ -12,11 +12,13 @@ import com.xianyu.mapper.UserMapper;
 import com.xianyu.service.IUserService;
 import com.xianyu.utils.JwtUtils;
 import com.xianyu.utils.RegexUtils;
+import com.xianyu.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import java.util.HashMap;
@@ -71,7 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail("验证码错误");
         }
 
-        User user = query().ge("phone", phone).one();
+        User user = query().eq("phone", phone).one();
         if (user==null){
             //注册用户
             user=creatUserWithPhone(phone);
@@ -104,9 +106,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public Result logout(HttpSession session) {
-        session.removeAttribute(DEFAULT_SESSION_KEY);
+    public Result logout(HttpServletRequest request) {
+        String Token = request.getHeader("authorization");
+        stringRedisTemplate.delete(LOGIN_USER_KEY+Token);
         return Result.ok();
+    }
+
+    @Override
+    public Result queryUser(Long id) {
+        User user = getById(id);
+        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        return Result.ok(userDTO);
     }
 
     private User creatUserWithPhone(String phone) {
@@ -120,4 +130,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         save(user);
         return user;
     }
+
 }
