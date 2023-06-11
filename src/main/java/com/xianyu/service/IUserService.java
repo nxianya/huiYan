@@ -34,4 +34,6 @@ public interface IUserService extends IService<User> {
     Result queryUser(Long id);
 
     Result sign();
+
+    Result signCount();
 }

@@ -15,6 +15,7 @@ import com.xianyu.utils.Md5Util;
 import com.xianyu.utils.RegexUtils;
 import com.xianyu.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -170,4 +172,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return user;
     }
 
+
+    @Override
+    public Result signCount() {
+        //获取当前用户
+        Long userId = UserHolder.getUser().getId();
+        //获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyy/MM"));
+        //组装key
+        String key = USER_SIGN_KEY+userId+keySuffix;
+        //获取截止本日的签到记录
+        int dayOfMonth = now.getDayOfMonth();
+        List<Long> result = stringRedisTemplate.opsForValue().bitField(
+                key, BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).valueAt(0)
+        );
+        if (result==null||result.isEmpty()){
+            return Result.ok(0);
+        }
+        Long num = result.get(0);
+        if (num==null||num==0){
+            return Result.ok(0);
+        }
+        //计数器
+        int count=0;
+        //循环遍历位移解析签到记录
+        while (true){
+            if ((num & 1)==0){
+                //遇0:未签到,退出循环
+                break;
+            }else {
+                //遇1:计数器加一
+                count++;
+            }
+            //向右位移遍历
+            num >>>=1;
+        }
+        return Result.ok(count);
+    }
 }
