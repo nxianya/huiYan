@@ -41,7 +41,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result sendCode(String phone, HttpSession session) {
         //验证手机号
-        if (RegexUtils.isPhoneInvalid(phone)){
+        if (RegexUtils.isPhoneInvalid(phone)) {
             //手机号无效
             return Result.fail("手机号格式错误");
         }
@@ -52,8 +52,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //todo 发送验证码
         //穷,没钱,先模拟
         //使用redis缓存验证码
-        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY+phone,code,LOGIN_CODE_TTL,TimeUnit.MINUTES);
-        log.info("code:{}",code);
+        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + phone, code, LOGIN_CODE_TTL, TimeUnit.MINUTES);
+        log.info("code:{}", code);
         return Result.ok();
     }
 
@@ -61,35 +61,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public Result login(LoginFormDTO loginForm) {
         //校验手机号是否正确
         String phone = loginForm.getPhone();
-        if (RegexUtils.isPhoneInvalid(phone)){
+        if (RegexUtils.isPhoneInvalid(phone)) {
             return Result.fail("手机号格式错误");
         }
         //获取输入的验证码进行比较
         String inputCode = loginForm.getCode();
-        String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
-        if (cacheCode==null&&loginForm.getPassword()==null){
-            return Result.fail("请先获取验证码");
+        String inputPassword = loginForm.getPassword();
+        if (inputCode == null && inputPassword == null) {
+            return Result.fail("请输入验证码或密码");
+        }else if (inputCode != null && inputPassword != null){
+            //虽然不可能但还是要考虑到
+            return Result.fail("无效输入");
         }
-        else if(cacheCode!=null){
-            if (!inputCode.equals(cacheCode)) {
+        String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
+        //短信登录
+        if (inputCode != null ) {
+            if (cacheCode==null){
+                return Result.fail("请先获取验证码");
+            }
+            else if (!inputCode.equals(cacheCode)) {
                 return Result.fail("验证码错误");
             }
         }
+        //密码登录
         User user = query().eq("phone", phone).one();
-        if (user==null){
-            //注册用户
-            user=creatUserWithPhone(phone);
-        }else {
+        if (inputPassword != null ) {
             if (!user.getPassword().equals(Md5Util.inputPassToDBPass(loginForm.getPassword()))) {
-                return Result.fail("密码错误,请输入正确的密码");
+                return Result.fail("密码错误");
             }
+        }
+        if (user == null) {
+            //注册用户
+            user = creatUserWithPhone(phone);
         }
         //将用户的敏感信息筛除
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         //userDTO转为HashMap并将userMap中的值转换为String类型,方式一
-        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO,new HashMap<>(),
-                CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor((fieldName,fieldValue)->
-                    fieldValue.toString()
+        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor((fieldName, fieldValue) ->
+                        fieldValue.toString()
                 ));
 //        session.setAttribute(DEFAULT_SESSION_KEY, BeanUtil.copyProperties(user, UserDTO.class));
         //生成Token
@@ -103,10 +113,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
 
         //将user对象转为Hash存储
-        stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY+Token,userMap);
+        stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + Token, userMap);
 
         //设置登录过期时间
-        stringRedisTemplate.expire(LOGIN_USER_KEY+Token,LOGIN_USER_TTL,TimeUnit.MINUTES);
+        stringRedisTemplate.expire(LOGIN_USER_KEY + Token, LOGIN_USER_TTL, TimeUnit.MINUTES);
         //返回Token
         return Result.ok(Token);
     }
@@ -114,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result logout(HttpServletRequest request) {
         String Token = request.getHeader("authorization");
-        stringRedisTemplate.delete(LOGIN_USER_KEY+Token);
+        stringRedisTemplate.delete(LOGIN_USER_KEY + Token);
         return Result.ok();
     }
 
@@ -131,7 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //默认密码
         user.setPassword(DEFAULT_PASSWORD);
         //随机用户名
-        user.setNickName(USER_NICK_NAME_PREFIX+RandomUtil.randomString(10));
+        user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         //创建日期和更新日期自动填充
         save(user);
         return user;
