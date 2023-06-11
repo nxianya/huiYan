@@ -22,6 +22,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -133,6 +136,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = getById(id);
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         return Result.ok(userDTO);
+    }
+
+    @Override
+    public Result sign() {
+        //获取当前用户
+        Long userId = UserHolder.getUser().getId();
+        //获取当前日期
+        LocalDateTime now = LocalDateTime.now();
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyy/MM"));
+        //拼接组装key
+        String key = USER_SIGN_KEY+userId+keySuffix;
+        //获取当前天数
+        int offset = now.getDayOfMonth();
+        Boolean result = stringRedisTemplate.opsForValue().getBit(key, offset - 1);
+        if (Boolean.TRUE.equals(result)) {
+            return Result.fail("今日已签到");
+        }
+        //存入redis
+        stringRedisTemplate.opsForValue().setBit(key,offset-1,true);
+        return Result.ok("签到成功");
     }
 
     private User creatUserWithPhone(String phone) {
